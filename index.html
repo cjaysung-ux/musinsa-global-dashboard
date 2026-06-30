@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>무신사 글로벌 브랜드 랭킹 대시보드</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;color:#1a1a2e;font-size:14px}
+.header{background:#1a1a2e;color:#fff;padding:16px 24px;display:flex;align-items:center;gap:12px}
+.header h1{font-size:18px;font-weight:700;letter-spacing:-0.3px}
+.header .badge{background:#ff6b35;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;letter-spacing:0.5px}
+.header .updated{margin-left:auto;font-size:11px;color:#aaa}
+.container{max-width:1280px;margin:0 auto;padding:16px}
+.tabs{display:flex;gap:0;border-bottom:2px solid #e2e6ea;margin-bottom:16px}
+.tab{padding:10px 20px;cursor:pointer;font-size:13px;font-weight:600;color:#666;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s}
+.tab.active{color:#1a1a2e;border-bottom-color:#1a1a2e}
+.tab:hover:not(.active){color:#333}
+.panel{display:none}.panel.active{display:block}
+.controls{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.filter-label{font-size:12px;color:#666;font-weight:600}
+.btn-group{display:flex;gap:4px}
+.btn{padding:5px 12px;border:1px solid #d0d5dd;border-radius:6px;background:#fff;cursor:pointer;font-size:12px;color:#555;font-weight:500;transition:all .15s}
+.btn.active{background:#1a1a2e;color:#fff;border-color:#1a1a2e}
+.btn:hover:not(.active){background:#f7f9fc}
+.divider{width:1px;height:20px;background:#e2e6ea;margin:0 4px}
+.table-wrap{background:#fff;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.08);overflow:hidden}
+table{width:100%;border-collapse:collapse}
+th{background:#f7f9fc;padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:#888;letter-spacing:.5px;text-transform:uppercase;border-bottom:1px solid #e9ecf0}
+th:first-child{width:44px;text-align:center}
+th.num{text-align:right}
+td{padding:9px 14px;border-bottom:1px solid #f0f2f5;font-size:13px;vertical-align:middle}
+td:first-child{text-align:center}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafbff}
+.rank-badge{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;font-size:12px;font-weight:700;color:#666;background:#f0f2f5}
+.rank-badge.gold{background:#FFF3CD;color:#B8860B}
+.rank-badge.silver{background:#F0F0F0;color:#666}
+.rank-badge.bronze{background:#FDE8D8;color:#A0522D}
+.brand-code{font-size:11px;color:#aaa;margin-left:5px}
+.growth-pos{color:#e53935;font-weight:700}
+.growth-high{color:#c62828;font-weight:800}
+.new-badge{font-size:9px;background:#e53935;color:#fff;padding:1px 5px;border-radius:4px;margin-left:4px;font-weight:700}
+.brand-nm{font-weight:600;color:#1a1a2e}
+.country-tag{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600;margin-right:4px}
+.c-jp{background:#FFF0F0;color:#c0392b}
+.c-us{background:#EEF5FF;color:#2563eb}
+.c-hk{background:#FFF8E7;color:#B7791F}
+.c-tw{background:#F0FFF4;color:#276749}
+.c-sg{background:#FDF4FF;color:#7C3AED}
+.gender-badge{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700;margin-right:4px}
+.g-m{background:#E8F4FD;color:#1565C0}
+.g-w{background:#FCE4EC;color:#C62828}
+.g-mw{background:#F3E5F5;color:#6A1B9A}
+.empty{text-align:center;padding:40px;color:#aaa;font-size:13px}
+.summary-bar{display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.summary-card{background:#fff;border-radius:8px;padding:10px 16px;flex:1;min-width:120px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+.summary-card .s-label{font-size:10px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.summary-card .s-val{font-size:20px;font-weight:800;color:#1a1a2e;margin-top:2px}
+.summary-card .s-sub{font-size:10px;color:#aaa;margin-top:1px}
+</style>
+</head>
+<body>
+<div class="header">
+  <div>
+    <div style="font-size:11px;color:#aaa;margin-bottom:2px">MUSINSA GLOBAL STORE</div>
+    <h1>브랜드 랭킹 대시보드</h1>
+  </div>
+  <span class="badge">LIVE</span>
+  <span class="updated" id="updatedAt"></span>
+</div>
+<div class="container">
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab(0)">국가별 월별 랭킹</div>
+    <div class="tab" onclick="switchTab(1)">급상승 브랜드 <span style="font-size:10px;color:#e53935">▲</span></div>
+    <div class="tab" onclick="switchTab(2)">성별 브랜드 랭킹</div>
+  </div>
+
+  <!-- TAB 1: Monthly Ranking -->
+  <div class="panel active" id="panel0">
+    <div class="controls">
+      <span class="filter-label">국가</span>
+      <div class="btn-group" id="country1">
+        <div class="btn active" onclick="setCountry(1,'ALL')">전체</div>
+        <div class="btn" onclick="setCountry(1,'Japan')">🇯🇵 일본</div>
+        <div class="btn" onclick="setCountry(1,'United States')">🇺🇸 미국</div>
+        <div class="btn" onclick="setCountry(1,'Hong Kong')">🇭🇰 홍콩</div>
+        <div class="btn" onclick="setCountry(1,'Taiwan')">🇹🇼 대만</div>
+        <div class="btn" onclick="setCountry(1,'Singapore')">🇸🇬 싱가포르</div>
+      </div>
+      <div class="divider"></div>
+      <span class="filter-label">월</span>
+      <div class="btn-group" id="month1">
+        <div class="btn active" onclick="setMonth('202606')">6월</div>
+        <div class="btn" onclick="setMonth('202605')">5월</div>
+        <div class="btn" onclick="setMonth('202604')">4월</div>
+        <div class="btn" onclick="setMonth('202603')">3월</div>
+      </div>
+    </div>
+    <div id="monthlyTable"></div>
+  </div>
+
+  <!-- TAB 2: Rising Brands -->
+  <div class="panel" id="panel1">
+    <div class="controls">
+      <span class="filter-label">국가</span>
+      <div class="btn-group" id="country2">
+        <div class="btn active" onclick="setCountry(2,'ALL')">전체</div>
+        <div class="btn" onclick="setCountry(2,'Japan')">🇯🇵 일본</div>
+        <div class="btn" onclick="setCountry(2,'United States')">🇺🇸 미국</div>
+        <div class="btn" onclick="setCountry(2,'Hong Kong')">🇭🇰 홍콩</div>
+        <div class="btn" onclick="setCountry(2,'Taiwan')">🇹🇼 대만</div>
+        <div class="btn" onclick="setCountry(2,'Singapore')">🇸🇬 싱가포르</div>
+      </div>
+    </div>
+    <div id="risingTable"></div>
+  </div>
+
+  <!-- TAB 3: Gender Ranking -->
+  <div class="panel" id="panel2">
+    <div class="controls">
+      <span class="filter-label">국가</span>
+      <div class="btn-group" id="country3">
+        <div class="btn active" onclick="setCountry(3,'ALL')">전체</div>
+        <div class="btn" onclick="setCountry(3,'Japan')">🇯🇵 일본</div>
+        <div class="btn" onclick="setCountry(3,'United States')">🇺🇸 미국</div>
+        <div class="btn" onclick="setCountry(3,'Hong Kong')">🇭🇰 홍콩</div>
+        <div class="btn" onclick="setCountry(3,'Taiwan')">🇹🇼 대만</div>
+        <div class="btn" onclick="setCountry(3,'Singapore')">🇸🇬 싱가포르</div>
+      </div>
+      <div class="divider"></div>
+      <span class="filter-label">성별</span>
+      <div class="btn-group" id="gender3">
+        <div class="btn active" onclick="setGender('MW')">공용 (MW)</div>
+        <div class="btn" onclick="setGender('W')">여성 (W)</div>
+        <div class="btn" onclick="setGender('M')">남성 (M)</div>
+      </div>
+    </div>
+    <div id="genderTable"></div>
+  </div>
+</div>
+
+<script>
+// === DATA ===
+const BN = {
+  illigo:"일리고",flareup:"플레어업",mucent:"무센트",asyouare:"애즈유아",nastyfancyclub:"팬시클럽",
+  chicks:"칙스",misekiseoul:"미세키서울",glowny:"글로니",amesworldwide:"아메스 월드와이드",
+  muahmuah:"무아무아",likethemost:"라이크더모스트",placestudio:"플레이스 스튜디오",covernat:"커버낫",
+  niceghostclub:"나이스고스트클럽",rolarola:"로라로라",not4nerd:"낫포너드",ronron:"론론",
+  rosefrantz:"로제프란츠",deinet:"다이닛",matinkimjp:"마뗑킴",aakam:"아캄",crank:"크랭크",
+  jilsander:"질 샌더",aeae:"에이이에이이",venhit:"벤힛",lauf:"바우프",sinoon:"시눈",
+  matinkim:"마뗑킴",thisisneverthat:"디스이즈네버댓",kodak:"코닥",asura:"아수라",standoil:"스탠드오일",
+  rockfish:"락피쉬웨더웨어",hieta:"히에타",againstallodds:"에이지오디",generalideastandard:"제너럴아이디어",
+  mahagrid:"마하그리드",wackywilly:"와키윌리",misekiseoulmen:"미세키서울 맨",partimento:"파르티멘토",
+  glowny:"글로니",dimitriblack:"디미트리블랙",lemainsecond:"리메인세컨드",filluminate:"필루미네이트",
+  gakka2:"가까이 유니언즈",mindbridge:"마인드브릿지",suare:"수아레",scallywag:"스켈리웩",
+  travel:"트래블",maninstore:"무드인사이드",anolorcode:"어널러코드",otz:"오찌",khiho:"기호",
+  leterie:"레터리",standoil:"스탠드오일",archivepke:"아카이브앱크",mur:"무르",
+  highschooldisco:"하이스쿨디스코",hugyourskin:"허그유어스킨",pleasenofollow:"플리즈노팔로우",
+  gilaarchive:"길라아카이브",letterfrommoon:"레터프롬문",bittercells:"비터셀즈",osoi:"오소이",
+  twee:"트위",yeomim:"여밈",partimentowomen:"파르티멘토 우먼",bowlow:"바우로 프로덕트",
+  officialgarment:"덴아워",pino:"피인오",decoroso:"데꼬로소","1017alyx9sm":"1017 알릭스 9SM",
+  develove:"디벨로브",cpcompany:"씨피 컴퍼니","51percent":"51퍼센트",heisan:"하이산",
+  danswer:"디앤에스알",agnel:"아그넬",ganni:"가니",heleneparis:"헬레네파리스",
+  saltandchocolate:"솔트앤초콜릿",nyxx:"엔와이엑스엑스",nain:"아틀리에 나인",
+  khakipoint:"카키포인트",compagno:"꼼파뇨",hoodhood:"후드후드",etreausommet:"에트오소메",
+  avan:"어반드레스",machineboymachine:"아모우",badblood:"배드블러드",ason:"아손",
+  heisan:"하이산",escapefrom:"이스케이프프롬",hadex:"하덱스",luvistrue:"루비스트루",
+  danswer:"디앤에스알",misekiseoul:"미세키서울",misekiseoulmen:"미세키서울 맨",
+  rockcake:"락케이크",glack:"글랙",sleekglow:"슬릭글로우",ganisong:"가니송",
+  graver:"그레이버",outstanding:"아웃스탠딩",fennec:"페넥",yase:"야세",
+  aakam:"아캄",aeae:"에이이에이이",etreausommet:"에트오소메",
+  // Rising brands
+  officialgarment:"덴아워",soup:"수프",geigerjewelry:"가이거 주얼리",escstudio:"이에스씨 스튜디오",
+  leafclothing:"리프 클로딩",allincomplete:"올인컴플리트",euct:"유크트",depound:"드파운드",
+  afterpray12:"애프터프레이",valentino:"발렌티노",engbrox:"엥브록스",pippet:"피펫",
+  toteme:"토템",saintpain:"세인트페인",projectwave:"프로젝트웨이브",mellotory:"멜로토리",
+  doffjason:"도프제이슨",ajobyajooriginallabel:"아조 바이 아조",filluminate:"필루미네이트",
+  easynoeasy:"이지노이지",secondmonolgue:"세컨드모놀로그",nerdy:"너디",aecawhite:"에카화이트",
+  otz:"오찌",ghostrepublic:"고스트리퍼블릭",oddstudio:"오드스튜디오",setupexe:"셋업EXE",
+  venhit:"벤힛",leire:"레이르",likethemost:"라이크더모스트",asyouare:"애즈유아",mucent:"무센트",
+  hoodhood:"후드후드",hadex:"하덱스",hugyourskin:"허그유어스킨",travel:"트래블",mur:"무르",
+  graver:"그레이버",agolde:"아골드",nerdy:"너디",allincomplete:"올인컴플리트",
+  citybreeze:"시티브리즈",challansdeparis:"샬란드파리",coperni:"코페르니",tawntoe:"톤토",
+  beplain:"비플레인",isabelmarant:"이자벨 마랑",secondmonolgue:"세컨드모놀로그",lauf:"바우프",
+  wkndrs:"위켄더스",losesleepover16:"루즈슬립오버",nyxx:"엔와이엑스엑스",nmx:"엔엠엑스",
+  misekiseoulmen:"미세키서울 맨",agolde:"아골드",
+  // Others
+  thebarnnet:"더바넷",fairliar:"페어라이어 골프",frizmworks:"프리즘웍스",badblood:"배드블러드",
+  amesworldwide:"아메스 월드와이드",heleneparis:"헬레네파리스",sinoon:"시눈",
+  matinkimjp:"마뗑킴",jilsander:"질 샌더",crank:"크랭크"
+};
+
+const CTAG = {
+  "Japan":"<span class='country-tag c-jp'>🇯🇵 일본</span>",
+  "United States":"<span class='country-tag c-us'>🇺🇸 미국</span>",
+  "Hong Kong":"<span class='country-tag c-hk'>🇭🇰 홍콩</span>",
+  "Taiwan":"<span class='country-tag c-tw'>🇹🇼 대만</span>",
+  "Singapore":"<span class='country-tag c-sg'>🇸🇬 싱가포르</span>"
+};
+
+// Monthly: [ym, country, rnk, brand, revenue, qty, orders]
+const MONTHLY = [
+["202606","Hong Kong",1,"illigo",44330,855,440],["202606","Hong Kong",2,"flareup",32797,554,316],["202606","Hong Kong",3,"mucent",16798,391,216],["202606","Hong Kong",4,"asyouare",16510,347,202],["202606","Hong Kong",5,"nastyfancyclub",12477,240,178],["202606","Hong Kong",6,"chicks",12358,296,233],["202606","Hong Kong",7,"misekiseoul",10345,151,112],["202606","Hong Kong",8,"glowny",10236,163,66],["202606","Hong Kong",9,"amesworldwide",9581,329,225],["202606","Hong Kong",10,"muahmuah",9371,278,190],["202606","Hong Kong",11,"likethemost",9160,258,187],["202606","Hong Kong",12,"placestudio",8315,254,180],["202606","Hong Kong",13,"covernat",8310,173,90],["202606","Hong Kong",14,"khiho",8300,77,64],["202606","Hong Kong",15,"niceghostclub",8251,174,126],["202606","Hong Kong",16,"rolarola",8099,198,142],["202606","Hong Kong",17,"not4nerd",7565,139,82],["202606","Hong Kong",18,"ronron",7525,153,106],["202606","Hong Kong",19,"rosefrantz",7460,150,107],["202606","Hong Kong",20,"deinet",7114,110,73],
+["202606","Japan",1,"mucent",346196,5963,4225],["202606","Japan",2,"illigo",345233,6406,4846],["202606","Japan",3,"matinkimjp",139147,1809,1478],["202606","Japan",4,"aakam",116404,1755,1334],["202606","Japan",5,"flareup",96328,1500,1129],["202606","Japan",6,"nastyfancyclub",91354,1834,1581],["202606","Japan",7,"chicks",90439,2396,2046],["202606","Japan",8,"ronron",79987,1532,1153],["202606","Japan",9,"muahmuah",79712,2235,1663],["202606","Japan",10,"crank",78725,1573,1170],["202606","Japan",11,"misekiseoul",73547,1083,879],["202606","Japan",12,"jilsander",72220,78,64],["202606","Japan",13,"likethemost",69350,1591,1316],["202606","Japan",14,"aeae",65040,1326,1158],["202606","Japan",15,"glowny",59263,928,571],["202606","Japan",16,"placestudio",58495,1874,1547],["202606","Japan",17,"highschooldisco",56691,1335,1116],["202606","Japan",18,"venhit",55530,1573,1355],["202606","Japan",19,"lauf",52783,1410,1235],["202606","Japan",20,"sinoon",47325,639,497],
+["202606","Singapore",1,"matinkim",8825,120,78],["202606","Singapore",2,"glowny",7168,112,47],["202606","Singapore",3,"thisisneverthat",6566,74,60],["202606","Singapore",4,"flareup",3882,65,37],["202606","Singapore",5,"illigo",3743,67,40],["202606","Singapore",6,"covernat",3671,59,33],["202606","Singapore",7,"ronron",3147,61,31],["202606","Singapore",8,"rolarola",3141,70,34],["202606","Singapore",9,"kodak",2762,55,37],["202606","Singapore",10,"deinet",2437,35,29],["202606","Singapore",11,"asura",2186,44,19],["202606","Singapore",12,"standoil",2140,19,16],["202606","Singapore",13,"rockfish",2058,25,22],["202606","Singapore",14,"asyouare",2034,42,26],["202606","Singapore",15,"againstallodds",1940,68,37],["202606","Singapore",16,"generalideastandard",1844,44,28],["202606","Singapore",17,"hieta",1742,14,10],["202606","Singapore",18,"mahagrid",1696,32,24],["202606","Singapore",19,"misekiseoul",1640,23,15],["202606","Singapore",20,"wackywilly",1611,24,13],
+["202606","Taiwan",1,"otz",45612,409,167],["202606","Taiwan",2,"mucent",27643,310,154],["202606","Taiwan",3,"flareup",15851,265,143],["202606","Taiwan",4,"illigo",11483,217,131],["202606","Taiwan",5,"muahmuah",9153,106,57],["202606","Taiwan",6,"nastyfancyclub",5289,90,65],["202606","Taiwan",7,"aakam",4889,63,36],["202606","Taiwan",8,"asyouare",4654,88,52],["202606","Taiwan",9,"etreausommet",3333,59,35],["202606","Taiwan",10,"likethemost",3329,79,59],["202606","Taiwan",11,"niceghostclub",3110,64,46],["202606","Taiwan",12,"misekiseoul",3021,45,32],["202606","Taiwan",13,"aeae",2822,50,32],["202606","Taiwan",14,"chicks",2665,67,55],["202606","Taiwan",15,"glowny",2481,42,16],["202606","Taiwan",16,"badblood",2401,26,17],["202606","Taiwan",17,"rockcake",2370,36,19],["202606","Taiwan",18,"ronron",2314,45,29],["202606","Taiwan",19,"not4nerd",2297,36,19],["202606","Taiwan",20,"khiho",2175,18,18],
+["202606","United States",1,"partimento",3873463,46,32],["202606","United States",2,"illigo",28360,444,256],["202606","United States",3,"rockfish",26127,272,219],["202606","United States",4,"glowny",24413,290,117],["202606","United States",5,"dimitriblack",24408,666,476],["202606","United States",6,"lemainsecond",20561,577,369],["202606","United States",7,"flareup",20046,335,213],["202606","United States",8,"not4nerd",19403,341,213],["202606","United States",9,"filluminate",18599,476,352],["202606","United States",10,"matinkim",17683,219,163],["202606","United States",11,"likethemost",15543,400,285],["202606","United States",12,"gakka2",15073,408,284],["202606","United States",13,"mindbridge",15065,297,175],["202606","United States",14,"suare",13943,368,196],["202606","United States",15,"scallywag",13408,324,222],["202606","United States",16,"travel",13214,322,236],["202606","United States",17,"againstallodds",13071,419,260],["202606","United States",18,"maninstore",12530,238,194],["202606","United States",19,"anolorcode",11195,315,252],["202606","United States",20,"thisisneverthat",11112,145,99],
+["202605","Hong Kong",1,"illigo",6575,123,56],["202605","Hong Kong",2,"flareup",6314,105,55],["202605","Hong Kong",3,"ronron",4301,84,43],["202605","Hong Kong",4,"misekiseoul",3176,44,20],["202605","Hong Kong",5,"pleasenofollow",3135,47,24],["202605","Hong Kong",6,"deinet",3085,43,29],["202605","Hong Kong",7,"rolarola",2851,53,33],["202605","Hong Kong",8,"covernat",2301,43,24],["202605","Hong Kong",9,"leterie",2282,29,24],["202605","Hong Kong",10,"chicks",2176,55,38],["202605","Hong Kong",11,"nastyfancyclub",2154,35,27],["202605","Hong Kong",12,"aeae",2064,32,24],["202605","Hong Kong",13,"mucent",1998,46,24],["202605","Hong Kong",14,"osoi",1954,7,7],["202605","Hong Kong",15,"generalideastandard",1946,43,22],["202605","Hong Kong",16,"archivepke",1936,13,10],["202605","Hong Kong",17,"thisisneverthat",1888,29,22],["202605","Hong Kong",18,"etreausommet",1861,31,16],["202605","Hong Kong",19,"aakam",1839,27,13],["202605","Hong Kong",20,"glowny",1788,28,16],
+["202605","Japan",1,"illigo",206863,3660,3020],["202605","Japan",2,"matinkimjp",192813,1934,1534],["202605","Japan",3,"mucent",174041,2832,2207],["202605","Japan",4,"aeae",102272,2107,1795],["202605","Japan",5,"aakam",92423,1340,1017],["202605","Japan",6,"muahmuah",66616,1887,1330],["202605","Japan",7,"chicks",62352,1566,1258],["202605","Japan",8,"ronron",58199,1111,768],["202605","Japan",9,"flareup",51899,789,605],["202605","Japan",10,"nastyfancyclub",50303,933,788],["202605","Japan",11,"ason",45072,675,621],["202605","Japan",12,"crank",40254,769,580],["202605","Japan",13,"heisan",39482,862,732],["202605","Japan",14,"badblood",38240,369,282],["202605","Japan",15,"lauf",37595,1006,844],["202605","Japan",16,"standoil",37566,353,349],["202605","Japan",17,"machineboymachine",37208,911,702],["202605","Japan",18,"escapefrom",36896,942,786],["202605","Japan",19,"hadex",36447,890,432],["202605","Japan",20,"thisisneverthat",34940,593,480],
+["202605","Singapore",1,"glowny",7330,130,48],["202605","Singapore",2,"matinkim",7069,97,55],["202605","Singapore",3,"rolarola",5288,104,51],["202605","Singapore",4,"covernat",4303,76,53],["202605","Singapore",5,"thisisneverthat",3551,43,33],["202605","Singapore",6,"flareup",3243,53,28],["202605","Singapore",7,"illigo",3180,61,33],["202605","Singapore",8,"rockfish",3145,36,29],["202605","Singapore",9,"ronron",2635,51,31],["202605","Singapore",10,"kodak",2532,45,24],["202605","Singapore",11,"hieta",2179,18,12],["202605","Singapore",12,"wackywilly",2076,32,22],["202605","Singapore",13,"generalideastandard",2023,40,24],["202605","Singapore",14,"tillidie",1968,27,16],["202605","Singapore",15,"nain",1938,29,20],["202605","Singapore",16,"fairliar",1782,6,3],["202605","Singapore",17,"folnua",1749,8,7],["202605","Singapore",18,"badblood",1628,18,13],["202605","Singapore",19,"khiho",1595,16,13],["202605","Singapore",20,"misekiseoul",1580,25,16],
+["202605","Taiwan",1,"flareup",3798,64,32],["202605","Taiwan",2,"illigo",2975,54,42],["202605","Taiwan",3,"glowny",2815,41,16],["202605","Taiwan",4,"muahmuah",1920,68,29],["202605","Taiwan",5,"mucent",1891,39,28],["202605","Taiwan",6,"aakam",1658,24,12],["202605","Taiwan",7,"1017alyx9sm",1644,6,1],["202605","Taiwan",8,"etreausommet",1586,24,8],["202605","Taiwan",9,"thisisneverthat",1571,18,12],["202605","Taiwan",10,"hondaxphyps",1412,26,10],["202605","Taiwan",11,"badblood",1342,10,4],["202605","Taiwan",12,"grooverhyme",1285,41,17],["202605","Taiwan",13,"restandrecreation",1189,24,12],["202605","Taiwan",14,"aeae",1140,20,12],["202605","Taiwan",15,"hoodhood",1132,25,12],["202605","Taiwan",16,"misekiseoul",1114,18,12],["202605","Taiwan",17,"suare",1098,25,7],["202605","Taiwan",18,"ronron",1093,20,10],["202605","Taiwan",19,"lemaha",1008,15,13],["202605","Taiwan",20,"asyouare",1001,14,8],
+["202605","United States",1,"dimitriblack",25676,669,487],["202605","United States",2,"lemainsecond",24347,605,408],["202605","United States",3,"illigo",19583,289,192],["202605","United States",4,"gakka2",18352,469,300],["202605","United States",5,"rockfish",18280,184,157],["202605","United States",6,"matinkim",17829,216,151],["202605","United States",7,"flareup",17114,284,185],["202605","United States",8,"likethemost",16248,400,288],["202605","United States",9,"glowny",14622,156,76],["202605","United States",10,"not4nerd",14168,237,168],["202605","United States",11,"osoi",13834,47,44],["202605","United States",12,"suare",13061,345,176],["202605","United States",13,"filluminate",12348,314,237],["202605","United States",14,"anolorcode",12167,336,257],["202605","United States",15,"badblood",12078,134,82],["202605","United States",16,"scallywag",11879,285,210],["202605","United States",17,"ronron",11636,209,123],["202605","United States",18,"rolarola",11537,194,130],["202605","United States",19,"mindbridge",11110,216,139],["202605","United States",20,"compagno",11045,239,170],
+["202604","Hong Kong",1,"flareup",7896,133,72],["202604","Hong Kong",2,"illigo",5751,103,56],["202604","Hong Kong",3,"mucent",3051,64,44],["202604","Hong Kong",4,"ronron",3025,54,33],["202604","Hong Kong",5,"nastyfancyclub",2720,46,35],["202604","Hong Kong",6,"chicks",2515,68,35],["202604","Hong Kong",7,"leterie",2438,34,29],["202604","Hong Kong",8,"rolarola",2239,47,32],["202604","Hong Kong",9,"aakam",1912,26,12],["202604","Hong Kong",10,"asyouare",1860,35,19],["202604","Hong Kong",11,"nain",1840,23,16],["202604","Hong Kong",12,"drawfit",1763,35,8],["202604","Hong Kong",13,"compagno",1749,42,23],["202604","Hong Kong",14,"aeae",1713,32,22],["202604","Hong Kong",15,"khiho",1648,14,14],["202604","Hong Kong",16,"placestudio",1636,46,35],["202604","Hong Kong",17,"niceghostclub",1615,33,23],["202604","Hong Kong",18,"luvistrue",1573,43,19],["202604","Hong Kong",19,"pleasenofollow",1559,28,16],["202604","Hong Kong",20,"bittercells",1535,45,28],
+["202604","Japan",1,"illigo",483377,6602,5531],["202604","Japan",2,"mucent",478230,6790,5298],["202604","Japan",3,"muahmuah",218701,3649,2714],["202604","Japan",4,"chicks",212102,4120,3326],["202604","Japan",5,"ason",199946,2816,2454],["202604","Japan",6,"crank",178668,2202,1849],["202604","Japan",7,"matinkimjp",164564,2140,1790],["202604","Japan",8,"flareup",160579,1992,1534],["202604","Japan",9,"likethemost",148606,2191,1877],["202604","Japan",10,"aakam",146948,1781,1443],["202604","Japan",11,"placestudio",118252,2930,2490],["202604","Japan",12,"ronron",114705,2034,1669],["202604","Japan",13,"rosefrantz",111145,1534,1346],["202604","Japan",14,"escapefrom",102640,2309,2040],["202604","Japan",15,"lauf",101179,2046,1739],["202604","Japan",16,"luvistrue",90786,1181,1059],["202604","Japan",17,"badblood",89453,762,607],["202604","Japan",18,"misekiseoul",85108,963,822],["202604","Japan",19,"danswer",81859,889,759],["202604","Japan",20,"dimitriblack",77989,1704,1367],
+["202604","Singapore",1,"matinkim",6868,94,53],["202604","Singapore",2,"glowny",4313,75,34],["202604","Singapore",3,"flareup",4182,66,36],["202604","Singapore",4,"covernat",4082,63,39],["202604","Singapore",5,"illigo",3841,66,32],["202604","Singapore",6,"rockfish",3643,43,34],["202604","Singapore",7,"rolarola",3450,61,37],["202604","Singapore",8,"thisisneverthat",2728,37,24],["202604","Singapore",9,"ronron",2445,41,20],["202604","Singapore",10,"wackywilly",2337,38,20],["202604","Singapore",11,"hadex",2105,49,25],["202604","Singapore",12,"gucci",1836,2,2],["202604","Singapore",13,"ason",1813,21,17],["202604","Singapore",14,"kodak",1791,29,19],["202604","Singapore",15,"rosefrantz",1629,29,19],["202604","Singapore",16,"hieta",1581,10,9],["202604","Singapore",17,"badblood",1541,21,14],["202604","Singapore",18,"nastyfancyclub",1455,31,23],["202604","Singapore",19,"yase",1332,8,8],["202604","Singapore",20,"dimitriblack",1323,36,23],
+["202604","Taiwan",1,"oggitt",15764,6,4],["202604","Taiwan",2,"mucent",4924,103,52],["202604","Taiwan",3,"flareup",4810,81,37],["202604","Taiwan",4,"illigo",2566,45,28],["202604","Taiwan",5,"onerm",2218,11,5],["202604","Taiwan",6,"courreges",2171,3,1],["202604","Taiwan",7,"aakam",1965,29,12],["202604","Taiwan",8,"ronron",1815,36,11],["202604","Taiwan",9,"badblood",1703,14,7],["202604","Taiwan",10,"bhpoloclub",1487,15,7],["202604","Taiwan",11,"nastyfancyclub",1457,21,11],["202604","Taiwan",12,"chicks",1380,44,21],["202604","Taiwan",13,"scallywag",1213,28,17],["202604","Taiwan",14,"kume",1183,6,2],["202604","Taiwan",15,"aeae",1096,19,12],["202604","Taiwan",16,"thisisneverthat",1093,13,9],["202604","Taiwan",17,"hondaxphyps",1078,16,8],["202604","Taiwan",18,"pleasenofollow",1076,17,7],["202604","Taiwan",19,"grooverhyme",1042,17,7],["202604","Taiwan",20,"rolarola",1012,24,10],
+["202604","United States",1,"lemainsecond",24688,624,392],["202604","United States",2,"likethemost",19487,438,312],["202604","United States",3,"flareup",18667,305,186],["202604","United States",4,"illigo",18152,266,177],["202604","United States",5,"rockfish",17136,178,137],["202604","United States",6,"dimitriblack",17087,460,339],["202604","United States",7,"gakka2",17026,440,295],["202604","United States",8,"matinkim",13225,150,104],["202604","United States",9,"glowny",12948,141,60],["202604","United States",10,"not4nerd",12219,183,135],["202604","United States",11,"avan",11555,241,176],["202604","United States",12,"compagno",10946,231,135],["202604","United States",13,"travel",10419,219,165],["202604","United States",14,"badblood",10276,115,77],["202604","United States",15,"scallywag",10050,229,173],["202604","United States",16,"ronron",9763,182,129],["202604","United States",17,"againstallodds",9097,299,174],["202604","United States",18,"rolarola",8757,153,100],["202604","United States",19,"trillion",8481,223,178],["202604","United States",20,"suare",8444,204,118],
+["202603","Hong Kong",1,"illigo",5375,83,50],["202603","Hong Kong",2,"covernat",3746,66,35],["202603","Hong Kong",3,"mucent",3550,69,39],["202603","Hong Kong",4,"flareup",3506,52,38],["202603","Hong Kong",5,"etreausommet",3218,55,23],["202603","Hong Kong",6,"ronron",2732,51,24],["202603","Hong Kong",7,"thisisneverthat",2414,32,17],["202603","Hong Kong",8,"nastyfancyclub",2212,30,25],["202603","Hong Kong",9,"chicks",2209,49,22],["202603","Hong Kong",10,"thecoldestmoment",1979,31,16],["202603","Hong Kong",11,"hugyourskin",1972,27,13],["202603","Hong Kong",12,"archivepke",1714,11,9],["202603","Hong Kong",13,"muahmuah",1654,50,29],["202603","Hong Kong",14,"aakam",1653,21,10],["202603","Hong Kong",15,"osoi",1439,5,5],["202603","Hong Kong",16,"luvistrue",1426,27,14],["202603","Hong Kong",17,"letterfrommoon",1354,29,12],["202603","Hong Kong",18,"placestudio",1350,34,24],["202603","Hong Kong",19,"rolarola",1271,24,15],["202603","Hong Kong",20,"pleasenofollow",1262,20,9],
+["202603","Japan",1,"mucent",188683,2443,1916],["202603","Japan",2,"illigo",150241,2086,1796],["202603","Japan",3,"matinkimjp",132194,1549,1259],["202603","Japan",4,"ronron",52929,857,623],["202603","Japan",5,"badblood",52698,301,248],["202603","Japan",6,"aakam",49456,541,442],["202603","Japan",7,"muahmuah",48950,1259,820],["202603","Japan",8,"placestudio",46498,1261,967],["202603","Japan",9,"outstanding",42634,123,98],["202603","Japan",10,"flareup",39025,545,422],["202603","Japan",11,"graver",38697,315,254],["202603","Japan",12,"crank",38023,693,554],["202603","Japan",13,"ason",37051,523,470],["202603","Japan",14,"chicks",34114,684,590],["202603","Japan",15,"fennec",33645,273,262],["202603","Japan",16,"yase",33424,198,190],["202603","Japan",17,"hadex",33310,722,356],["202603","Japan",18,"jilsander",32439,23,23],["202603","Japan",19,"heisan",28132,359,321],["202603","Japan",20,"aeae",27026,468,419],
+["202603","Singapore",1,"covernat",7347,101,60],["202603","Singapore",2,"matinkim",4142,51,37],["202603","Singapore",3,"thisisneverthat",3530,41,28],["202603","Singapore",4,"wackywilly",2995,49,20],["202603","Singapore",5,"glowny",2883,47,21],["202603","Singapore",6,"rockfish",2471,26,19],["202603","Singapore",7,"ronron",2442,47,23],["202603","Singapore",8,"kodak",2425,30,16],["202603","Singapore",9,"illigo",2128,39,25],["202603","Singapore",10,"borntowin",1853,31,10],["202603","Singapore",11,"hieta",1835,15,10],["202603","Singapore",12,"rolarola",1782,33,24],["202603","Singapore",13,"aeae",1456,20,13],["202603","Singapore",14,"badblood",1433,16,8],["202603","Singapore",15,"lifework",1338,15,6],["202603","Singapore",16,"hadex",1260,27,18],["202603","Singapore",17,"frizmworks",1113,16,8],["202603","Singapore",18,"mindbridge",1107,19,11],["202603","Singapore",19,"etreausommet",1087,19,12],["202603","Singapore",20,"muahmuah",1070,33,23],
+["202603","Taiwan",1,"mucent",4669,92,46],["202603","Taiwan",2,"flareup",4497,71,37],["202603","Taiwan",3,"astralprojection",2424,24,8],["202603","Taiwan",4,"ronron",2283,35,14],["202603","Taiwan",5,"badblood",2211,18,13],["202603","Taiwan",6,"muahmuah",2124,75,29],["202603","Taiwan",7,"anoblir",2077,41,11],["202603","Taiwan",8,"lcdctm",1885,16,5],["202603","Taiwan",9,"yase",1780,11,10],["202603","Taiwan",10,"illigo",1707,29,20],["202603","Taiwan",11,"netherworld",1352,26,8],["202603","Taiwan",12,"anotheroffice",1233,11,3],["202603","Taiwan",13,"aakam",1198,16,9],["202603","Taiwan",14,"madden",1195,20,9],["202603","Taiwan",15,"nastyfancyclub",1135,12,9],["202603","Taiwan",16,"luvistrue",1122,17,11],["202603","Taiwan",17,"callmeyourhighness",1110,29,16],["202603","Taiwan",18,"suare",1056,26,10],["202603","Taiwan",19,"covernat",1046,28,15],["202603","Taiwan",20,"anderssonbell",990,4,1],
+["202603","United States",1,"lemainsecond",42907,1059,667],["202603","United States",2,"likethemost",25602,594,413],["202603","United States",3,"gakka2",21917,541,375],["202603","United States",4,"signature",19248,529,388],["202603","United States",5,"dimitriblack",17952,477,350],["202603","United States",6,"flareup",17321,261,171],["202603","United States",7,"typeservice",17015,45,31],["202603","United States",8,"rockfish",16183,154,120],["202603","United States",9,"againstallodds",15163,492,328],["202603","United States",10,"scallywag",14076,312,228],["202603","United States",11,"avan",13521,295,213],["202603","United States",12,"matinkim",13517,142,116],["202603","United States",13,"compagno",13364,280,177],["202603","United States",14,"illigo",12420,167,132],["202603","United States",15,"ronron",11301,203,123],["202603","United States",16,"blackmoment",10488,121,113],["202603","United States",17,"toffee",9842,246,198],["202603","United States",18,"covernat",9563,129,99],["202603","United States",19,"zerostreet",9439,93,56],["202603","United States",20,"suare",9211,231,150]
+];
+
+// Rising: [country, rnk, brand, rev_jun, rev_may, growth_pct]
+const RISING = [
+["Hong Kong",1,"filluminate",3314,39,8397.4],["Hong Kong",2,"easynoeasy",4525,161,2710.6],["Hong Kong",3,"secondmonolgue",3301,137,2309.5],["Hong Kong",4,"mur",4027,181,2124.9],["Hong Kong",5,"nerdy",2176,103,2012.6],["Hong Kong",6,"aecawhite",2158,154,1301.3],["Hong Kong",7,"otz",4922,370,1230.3],["Hong Kong",8,"graver",2756,216,1175.9],["Hong Kong",9,"ghostrepublic",4176,330,1165.5],["Hong Kong",10,"hoodhood",5970,532,1022.2],["Hong Kong",11,"oddstudio",4062,371,994.9],["Hong Kong",12,"likethemost",9160,852,975.1],["Hong Kong",13,"asyouare",16510,1551,964.5],["Hong Kong",14,"hadex",4063,438,827.6],["Hong Kong",15,"hugyourskin",3528,393,798.7],["Hong Kong",16,"setupexe",2551,287,788.9],["Hong Kong",17,"travel",2619,299,775.9],["Hong Kong",18,"mucent",16798,1998,740.7],["Hong Kong",19,"venhit",2713,323,740.1],["Hong Kong",20,"leire",2981,367,712.3],
+["Japan",1,"officialgarment",10763,196,5403.5],["Japan",2,"soup",3855,91,4137.5],["Japan",3,"geigerjewelry",3297,96,3325.7],["Japan",4,"escstudio",9887,634,1460.4],["Japan",5,"leafclothing",4253,322,1222.6],["Japan",6,"agnel",24205,2018,1099.2],["Japan",7,"allincomplete",16249,1464,1009.6],["Japan",8,"euct",3331,306,987.4],["Japan",9,"depound",6389,599,966.3],["Japan",10,"jilsander",72220,7044,925.3],["Japan",11,"afterpray12",11935,1222,877.0],["Japan",12,"valentino",4548,466,876.4],["Japan",13,"engbrox",2890,297,872.1],["Japan",14,"pippet",5062,541,835.1],["Japan",15,"toteme",2809,316,790.2],["Japan",16,"saintpain",13248,1844,618.4],["Japan",17,"projectwave",4611,673,585.5],["Japan",18,"mellotory",5178,783,561.2],["Japan",19,"doffjason",11362,1750,549.3],["Japan",20,"ajobyajooriginallabel",10210,1611,533.9],
+["Singapore",1,"deinet",2437,865,181.6],["Singapore",2,"standoil",2140,794,169.5],["Singapore",3,"asura",2186,952,129.7],["Singapore",4,"asyouare",2034,891,128.3],["Singapore",5,"thisisneverthat",6566,3551,84.9],["Singapore",6,"matinkim",8825,7069,24.8],["Singapore",7,"flareup",3882,3243,19.7],["Singapore",8,"ronron",3147,2635,19.4],["Singapore",9,"illigo",3743,3180,17.7],["Singapore",10,"kodak",2762,2532,9.1],
+["Taiwan",1,"otz",45612,255,17786.9],["Taiwan",2,"likethemost",3329,144,2219.1],["Taiwan",3,"niceghostclub",3110,212,1367.2],["Taiwan",4,"mucent",27643,1891,1362.0],["Taiwan",5,"not4nerd",2297,246,833.8],["Taiwan",6,"nastyfancyclub",5289,573,822.8],["Taiwan",7,"glack",2006,224,795.7],["Taiwan",8,"muahmuah",9153,1920,376.7],["Taiwan",9,"asyouare",4654,1001,364.9],["Taiwan",10,"flareup",15851,3798,317.3],["Taiwan",11,"khiho",2175,522,316.7],["Taiwan",12,"illigo",11483,2975,285.9],["Taiwan",13,"chicks",2665,786,239.1],["Taiwan",14,"aakam",4889,1658,194.9],["Taiwan",15,"misekiseoul",3021,1114,171.2],["Taiwan",16,"rockcake",2370,953,148.7],["Taiwan",17,"aeae",2822,1140,147.7],["Taiwan",18,"ronron",2314,1093,111.7],["Taiwan",19,"etreausommet",3333,1586,110.1],["Taiwan",20,"hoodhood",2158,1132,90.7],
+["United States",1,"partimento",3873463,2882,134308.8],["United States",2,"misekiseoulmen",2951,452,552.9],["United States",3,"agolde",2091,326,541.4],["United States",4,"nerdy",5374,1193,350.5],["United States",5,"allincomplete",7818,1863,319.6],["United States",6,"citybreeze",2997,816,267.3],["United States",7,"challansdeparis",4190,1245,236.5],["United States",8,"coperni",4129,1280,222.6],["United States",9,"tawntoe",2075,652,218.3],["United States",10,"beplain",3402,1144,197.4],["United States",11,"isabelmarant",2045,695,194.2],["United States",12,"1993studio",5240,1806,190.1],["United States",13,"secondmonolgue",2913,1126,158.7],["United States",14,"lauf",3760,1474,155.1],["United States",15,"wkndrs",2108,844,149.8],["United States",16,"losesleepover16",6839,2844,140.5],["United States",17,"nyxx",2636,1157,127.8],["United States",18,"mucent",6388,2996,113.2],["United States",19,"asura",6597,3107,112.3],["United States",20,"nmx",3574,1715,108.4]
+];
+
+// Gender: [country, gender, rnk, brand, brand_nm, revenue, qty, orders]
+const GENDER = [
+["Hong Kong","M",1,"bowlow","바우로 프로덕트",1795,45,23],["Hong Kong","M",2,"51percent","51퍼센트",979,19,9],["Hong Kong","M",3,"pino","피인오",731,24,20],["Hong Kong","M",4,"dunstformen","던스트 포 맨",484,6,2],["Hong Kong","M",5,"cpcompany","씨피 컴퍼니",474,1,1],["Hong Kong","M",6,"decoroso","데꼬로소",416,8,6],["Hong Kong","M",7,"eprlayer","이피알 레이어",222,2,1],["Hong Kong","M",8,"prodeshirt","프로드셔츠",180,2,1],["Hong Kong","M",9,"r4","알포",153,1,1],["Hong Kong","M",10,"taille","타일레",143,1,1],["Hong Kong","M",11,"misekiseoulmen","미세키서울 맨",140,3,2],["Hong Kong","M",12,"develove","디벨로브",126,3,3],["Hong Kong","M",13,"pleuvoir","플르부아",111,7,7],["Hong Kong","M",14,"barbellworks","바벨웍스",106,3,3],["Hong Kong","M",15,"scenery","오프메이드",104,5,3],["Hong Kong","M",16,"comspace1980","컴스페이스1980",104,1,1],["Hong Kong","M",17,"bassclef","베이스클레프",96,4,4],["Hong Kong","M",18,"intersection","인터섹션",90,1,1],["Hong Kong","M",19,"siecle","시에클",90,1,1],["Hong Kong","M",20,"cord","코드",90,1,1],
+["Hong Kong","MW",1,"illigo","일리고",44330,855,440],["Hong Kong","MW",2,"flareup","플레어업",32797,554,316],["Hong Kong","MW",3,"mucent","무센트",16798,391,216],["Hong Kong","MW",4,"nastyfancyclub","팬시클럽",12477,240,178],["Hong Kong","MW",5,"chicks","칙스",12358,296,233],["Hong Kong","MW",6,"misekiseoul","미세키서울",10345,151,112],["Hong Kong","MW",7,"glowny","글로니",10236,163,66],["Hong Kong","MW",8,"amesworldwide","아메스 월드와이드",9581,329,225],["Hong Kong","MW",9,"muahmuah","무아무아",9371,278,190],["Hong Kong","MW",10,"likethemost","라이크더모스트",9160,258,187],["Hong Kong","MW",11,"placestudio","플레이스 스튜디오",8315,254,180],["Hong Kong","MW",12,"covernat","커버낫",8310,173,90],["Hong Kong","MW",13,"niceghostclub","나이스고스트클럽",8251,174,126],["Hong Kong","MW",14,"rolarola","로라로라",8099,198,142],["Hong Kong","MW",15,"not4nerd","낫포너드",7565,139,82],["Hong Kong","MW",16,"deinet","다이닛",7114,110,73],["Hong Kong","MW",17,"aakam","아캄",6887,104,62],["Hong Kong","MW",18,"compagno","꼼파뇨",6518,163,106],["Hong Kong","MW",19,"hoodhood","후드후드",5970,136,75],["Hong Kong","MW",20,"etreausommet","에트오소메",5264,98,70],
+["Hong Kong","W",1,"asyouare","애즈유아",16510,347,202],["Hong Kong","W",2,"khiho","기호",8300,77,64],["Hong Kong","W",3,"ronron","론론",7525,153,106],["Hong Kong","W",4,"rosefrantz","로제프란츠",7460,150,107],["Hong Kong","W",5,"standoil","스탠드오일",7066,99,73],["Hong Kong","W",6,"archivepke","아카이브앱크",5224,34,28],["Hong Kong","W",7,"otz","오찌",4922,81,68],["Hong Kong","W",8,"mur","무르",4027,48,43],["Hong Kong","W",9,"leterie","레터리",4014,51,48],["Hong Kong","W",10,"highschooldisco","하이스쿨디스코",3877,90,74],["Hong Kong","W",11,"hugyourskin","허그유어스킨",3528,62,50],["Hong Kong","W",12,"pleasenofollow","플리즈노팔로우",3418,61,44],["Hong Kong","W",13,"gilaarchive","길라아카이브",3256,71,55],["Hong Kong","W",14,"letterfrommoon","레터프롬문",3137,61,40],["Hong Kong","W",15,"bittercells","비터셀즈",3042,84,61],["Hong Kong","W",16,"osoi","오소이",2952,12,11],["Hong Kong","W",17,"asura","아수라",2894,57,38],["Hong Kong","W",18,"twee","트위",2434,76,56],["Hong Kong","W",19,"yeomim","여밈",1981,17,15],["Hong Kong","W",20,"partimentowomen","파르티멘토 우먼",1798,47,27],
+["Japan","M",1,"bowlow","바우로 프로덕트",22012,544,297],["Japan","M",2,"officialgarment","덴아워",10763,31,25],["Japan","M",3,"pino","피인오",7323,107,90],["Japan","M",4,"misekiseoulmen","미세키서울 맨",6424,107,78],["Japan","M",5,"decoroso","데꼬로소",5767,89,83],["Japan","M",6,"dollarflower","달러플라워",5506,1,1],["Japan","M",7,"1017alyx9sm","1017 알릭스 9SM",5237,19,15],["Japan","M",8,"develove","디벨로브",2422,62,55],["Japan","M",9,"cpcompany","씨피 컴퍼니",2309,6,5],["Japan","M",10,"51percent","51퍼센트",2167,36,24],["Japan","M",11,"sentair","센테어",1983,53,45],["Japan","M",12,"heronpreston","헤론 프레스톤",1947,4,4],["Japan","M",13,"erl","이알엘",1687,2,1],["Japan","M",14,"fieldmanual","필드매뉴얼",1653,17,16],["Japan","M",15,"kinloch","커넥트킨록",1644,19,18],["Japan","M",16,"mistakeproject","미스테이크 프로젝트",1502,12,7],["Japan","M",17,"ameyewear","에이엠아이웨어",1499,7,6],["Japan","M",18,"acoldwall","어 콜드 월",1419,5,4],["Japan","M",19,"377place","페르메논",1383,45,24],["Japan","M",20,"dunstformen","던스트 포 맨",1323,14,12],
+["Japan","MW",1,"mucent","무센트",346196,5963,4225],["Japan","MW",2,"illigo","일리고",345233,6406,4846],["Japan","MW",3,"aakam","아캄",116404,1755,1334],["Japan","MW",4,"flareup","플레어업",96328,1500,1129],["Japan","MW",5,"nastyfancyclub","팬시클럽",91354,1834,1581],["Japan","MW",6,"chicks","칙스",90439,2396,2046],["Japan","MW",7,"muahmuah","무아무아",79712,2235,1663],["Japan","MW",8,"crank","크랭크",78725,1573,1170],["Japan","MW",9,"misekiseoul","미세키서울",73547,1083,879],["Japan","MW",10,"jilsander","질 샌더",72220,78,64],["Japan","MW",11,"likethemost","라이크더모스트",69350,1591,1316],["Japan","MW",12,"aeae","에이이에이이",65040,1326,1158],["Japan","MW",13,"glowny","글로니",59263,928,571],["Japan","MW",14,"placestudio","플레이스 스튜디오",58495,1874,1547],["Japan","MW",15,"venhit","벤힛",55530,1573,1355],["Japan","MW",16,"lauf","바우프",52783,1410,1235],["Japan","MW",17,"avan","어반드레스",43818,566,473],["Japan","MW",18,"machineboymachine","아모우",43753,1106,843],["Japan","MW",19,"heisan","하이산",42713,787,618],["Japan","MW",20,"danswer","디앤에스알",42511,641,504],
+["Japan","W",1,"matinkimjp","마뗑킴",139147,1809,1478],["Japan","W",2,"ronron","론론",79987,1532,1153],["Japan","W",3,"highschooldisco","하이스쿨디스코",56691,1335,1116],["Japan","W",4,"sinoon","시눈",47325,639,497],["Japan","W",5,"standoil","스탠드오일",43331,431,415],["Japan","W",6,"rosefrantz","로제프란츠",36452,662,565],["Japan","W",7,"agnel","아그넬",24205,56,38],["Japan","W",8,"hugyourskin","허그유어스킨",23130,388,318],["Japan","W",9,"ganni","가니",22839,109,98],["Japan","W",10,"asyouare","애즈유아",22507,401,331],["Japan","W",11,"asura","아수라",22208,480,339],["Japan","W",12,"heleneparis","헬레네파리스",21848,263,242],["Japan","W",13,"saltandchocolate","솔트앤초콜릿",20613,256,251],["Japan","W",14,"nyxx","엔와이엑스엑스",19270,375,291],["Japan","W",15,"twee","트위",19229,608,487],["Japan","W",16,"nain","아틀리에 나인",18684,351,289],["Japan","W",17,"khakipoint","카키포인트",18457,296,206],["Japan","W",18,"pleasenofollow","플리즈노팔로우",18262,298,218],["Japan","W",19,"partimentowomen","파르티멘토 우먼",17680,494,337],["Japan","W",20,"otz","오찌",15559,265,250],
+["Singapore","M",1,"dunstformen","던스트 포 맨",559,1,1],["Singapore","M",2,"bowlow","바우로 프로덕트",455,8,5],["Singapore","M",3,"51percent","51퍼센트",350,3,2],["Singapore","M",4,"pino","피인오",328,9,6],["Singapore","M",5,"decoroso","데꼬로소",315,3,3],["Singapore","M",6,"mistakeproject","미스테이크 프로젝트",251,2,2],["Singapore","M",7,"misekiseoulmen","미세키서울 맨",235,4,3],["Singapore","M",8,"newcheapchic","뉴치프시크디피",229,3,1],["Singapore","M",9,"miamiproject","마이애미프로젝트",160,2,2],["Singapore","M",10,"kinloch","커넥트킨록",156,2,2],["Singapore","M",11,"bellief","벨리프",152,3,1],["Singapore","M",12,"nationalpublicity","내셔널 퍼블리시티",141,3,3],["Singapore","M",13,"akept","아켑트",140,2,1],["Singapore","M",14,"chindown","친다운",135,1,1],["Singapore","M",15,"pleuvoir","플르부아",121,7,5],["Singapore","M",16,"shufit","슈피트",117,2,2],["Singapore","M",17,"paciencia","파시엔시아",112,3,1],["Singapore","M",18,"nande","난데",88,3,3],["Singapore","M",19,"endoor","엔도어",74,1,1],["Singapore","M",20,"amfeast","암피스트",71,1,1],
+["Singapore","MW",1,"matinkim","마뗑킴",8825,120,78],["Singapore","MW",2,"glowny","글로니",7168,112,47],["Singapore","MW",3,"thisisneverthat","디스이즈네버댓",6566,74,60],["Singapore","MW",4,"flareup","플레어업",3882,65,37],["Singapore","MW",5,"illigo","일리고",3743,67,40],["Singapore","MW",6,"covernat","커버낫",3671,59,33],["Singapore","MW",7,"rolarola","로라로라",3141,70,34],["Singapore","MW",8,"kodak","코닥",2762,55,37],["Singapore","MW",9,"deinet","다이닛",2437,35,29],["Singapore","MW",10,"rockfish","락피쉬웨더웨어",2058,25,22],["Singapore","MW",11,"againstallodds","에이지오디",1940,68,37],["Singapore","MW",12,"generalideastandard","제너럴아이디어",1844,44,28],["Singapore","MW",13,"mahagrid","마하그리드",1696,32,24],["Singapore","MW",14,"misekiseoul","미세키서울",1640,23,15],["Singapore","MW",15,"wackywilly","와키윌리",1611,24,13],["Singapore","MW",16,"thebarnnet","더바넷",1566,26,7],["Singapore","MW",17,"fairliar","페어라이어 골프",1537,6,4],["Singapore","MW",18,"frizmworks","프리즘웍스",1498,25,9],["Singapore","MW",19,"nastyfancyclub","팬시클럽",1496,32,23],["Singapore","MW",20,"badblood","배드블러드",1493,18,12],
+["Singapore","W",1,"ronron","론론",3147,61,31],["Singapore","W",2,"asura","아수라",2186,44,19],["Singapore","W",3,"standoil","스탠드오일",2140,19,16],["Singapore","W",4,"asyouare","애즈유아",2034,42,26],["Singapore","W",5,"hieta","히에타",1742,14,10],["Singapore","W",6,"archivepke","아카이브앱크",1531,10,7],["Singapore","W",7,"osoi","오소이",1490,5,5],["Singapore","W",8,"sinoon","시눈",1455,22,13],["Singapore","W",9,"letterfrommoon","레터프롬문",1272,23,14],["Singapore","W",10,"hugyourskin","허그유어스킨",1250,18,14],["Singapore","W",11,"khiho","기호",1139,9,8],["Singapore","W",12,"nain","아틀리에 나인",1076,14,8],["Singapore","W",13,"khakipoint","카키포인트",947,14,6],["Singapore","W",14,"gilaarchive","길라아카이브",918,18,11],["Singapore","W",15,"loeuvre","루에브르",898,8,7],["Singapore","W",16,"lingseoul","링서울",866,7,4],["Singapore","W",17,"yeomim","여밈",832,8,8],["Singapore","W",18,"pleasenofollow","플리즈노팔로우",820,13,11],["Singapore","W",19,"rosefrantz","로제프란츠",779,15,13],["Singapore","W",20,"painorpleasure","페인오어플레져",717,6,5],
+["Taiwan","M",1,"develove","디벨로브",1200,40,13],["Taiwan","M",2,"bowlow","바우로 프로덕트",997,19,6],["Taiwan","M",3,"51percent","51퍼센트",942,17,6],["Taiwan","M",4,"misekiseoulmen","미세키서울 맨",543,9,6],["Taiwan","M",5,"dunstformen","던스트 포 맨",200,3,1],["Taiwan","M",6,"pino","피인오",188,4,3],["Taiwan","M",7,"process","프로세스",167,3,3],["Taiwan","M",8,"miamiproject","마이애미프로젝트",161,2,2],["Taiwan","M",9,"nationalpublicity","내셔널 퍼블리시티",141,4,4],["Taiwan","M",10,"ridgeline","릿지라인",138,6,2],["Taiwan","M",11,"chindown","친다운",124,2,2],["Taiwan","M",12,"fieldmanual","필드매뉴얼",118,2,1],["Taiwan","M",13,"arcanefunk","아케인 펑크",106,2,1],["Taiwan","M",14,"decoroso","데꼬로소",104,2,1],["Taiwan","M",15,"siegfahrenheit","파렌하이트",97,1,1],["Taiwan","M",16,"akecii","아케시",90,1,1],["Taiwan","M",17,"thirdweave","써드위브",66,1,1],["Taiwan","M",18,"nande","난데",64,2,2],["Taiwan","M",19,"barbellworks","바벨웍스",64,2,1],["Taiwan","M",20,"amfeast","암피스트",55,1,1],
+["Taiwan","MW",1,"mucent","무센트",27643,310,154],["Taiwan","MW",2,"flareup","플레어업",15851,265,143],["Taiwan","MW",3,"illigo","일리고",11483,217,131],["Taiwan","MW",4,"muahmuah","무아무아",9153,106,57],["Taiwan","MW",5,"nastyfancyclub","팬시클럽",5289,90,65],["Taiwan","MW",6,"aakam","아캄",4889,63,36],["Taiwan","MW",7,"etreausommet","에트오소메",3333,59,35],["Taiwan","MW",8,"likethemost","라이크더모스트",3329,79,59],["Taiwan","MW",9,"niceghostclub","나이스고스트클럽",3110,64,46],["Taiwan","MW",10,"misekiseoul","미세키서울",3021,45,32],["Taiwan","MW",11,"aeae","에이이에이이",2822,50,32],["Taiwan","MW",12,"chicks","칙스",2665,67,55],["Taiwan","MW",13,"glowny","글로니",2481,42,16],["Taiwan","MW",14,"badblood","배드블러드",2401,26,17],["Taiwan","MW",15,"rockcake","락케이크",2370,36,19],["Taiwan","MW",16,"not4nerd","낫포너드",2297,36,19],["Taiwan","MW",17,"hoodhood","후드후드",2158,50,25],["Taiwan","MW",18,"glack","글랙",2006,39,21],["Taiwan","MW",19,"rolarola","로라로라",1842,40,28],["Taiwan","MW",20,"wackywilly","와키윌리",1796,29,20],
+["Taiwan","W",1,"otz","오찌",45612,409,167],["Taiwan","W",2,"asyouare","애즈유아",4654,88,52],["Taiwan","W",3,"ronron","론론",2314,45,29],["Taiwan","W",4,"khiho","기호",2175,18,18],["Taiwan","W",5,"pleasenofollow","플리즈노팔로우",1981,29,22],["Taiwan","W",6,"leterie","레터리",1719,29,12],["Taiwan","W",7,"standoil","스탠드오일",1422,18,15],["Taiwan","W",8,"gilaarchive","길라아카이브",1347,31,19],["Taiwan","W",9,"sleekglow","슬릭글로우",1258,30,19],["Taiwan","W",10,"ganisong","가니송",1181,4,3],["Taiwan","W",11,"nyxx","엔와이엑스엑스",1124,23,14],["Taiwan","W",12,"rosefrantz","로제프란츠",1110,18,14],["Taiwan","W",13,"archivepke","아카이브앱크",977,6,5],["Taiwan","W",14,"yeomim","여밈",962,10,10],["Taiwan","W",15,"highschooldisco","하이스쿨디스코",933,22,19],["Taiwan","W",16,"hugyourskin","허그유어스킨",905,14,10],["Taiwan","W",17,"bittercells","비터셀즈",840,24,17],["Taiwan","W",18,"osoi","오소이",822,4,4],["Taiwan","W",19,"twee","트위",803,24,15],["Taiwan","W",20,"khakipoint","카키포인트",779,17,12],
+["United States","M",1,"bowlow","바우로 프로덕트",6101,146,77],["United States","M",2,"misekiseoulmen","미세키서울 맨",2951,38,12],["United States","M",3,"pino","피인오",2237,78,51],["United States","M",4,"decoroso","데꼬로소",1575,29,25],["United States","M",5,"develove","디벨로브",1047,26,23],["United States","M",6,"acoldwall","어 콜드 월",949,2,1],["United States","M",7,"51percent","51퍼센트",797,9,4],["United States","M",8,"dunstformen","던스트 포 맨",729,8,7],["United States","M",9,"nande","난데",678,24,21],["United States","M",10,"cpcompany","씨피 컴퍼니",625,1,1],["United States","M",11,"bedford11th","베드포드일레븐스",551,3,3],["United States","M",12,"deldio","아틀리에 델디오",546,4,2],["United States","M",13,"mistakeproject","미스테이크 프로젝트",534,5,5],["United States","M",14,"unitedathle1","유나이티드 애슬",493,26,5],["United States","M",15,"heronpreston","헤론 프레스톤",482,1,1],["United States","M",16,"blayer","블레이어",470,12,9],["United States","M",17,"rockpsycho","락사이코",436,10,9],["United States","M",18,"stigma","스티그마",392,8,4],["United States","M",19,"esfai","에스파이",374,6,5],["United States","M",20,"process","프로세스",365,8,7],
+["United States","MW",1,"partimento","파르티멘토",3873463,46,32],["United States","MW",2,"illigo","일리고",28360,444,256],["United States","MW",3,"rockfish","락피쉬웨더웨어",26127,272,219],["United States","MW",4,"glowny","글로니",24413,290,117],["United States","MW",5,"dimitriblack","디미트리블랙",24408,666,476],["United States","MW",6,"lemainsecond","리메인세컨드",20561,577,369],["United States","MW",7,"flareup","플레어업",20046,335,213],["United States","MW",8,"not4nerd","낫포너드",19403,341,213],["United States","MW",9,"filluminate","필루미네이트",18599,476,352],["United States","MW",10,"matinkim","마뗑킴",17683,219,163],["United States","MW",11,"likethemost","라이크더모스트",15543,400,285],["United States","MW",12,"gakka2","가까이 유니언즈",15073,408,284],["United States","MW",13,"mindbridge","마인드브릿지",15065,297,175],["United States","MW",14,"suare","수아레",13943,368,196],["United States","MW",15,"scallywag","스켈리웩",13408,324,222],["United States","MW",16,"travel","트래블",13214,322,236],["United States","MW",17,"againstallodds","에이지오디",13071,419,260],["United States","MW",18,"maninstore","무드인사이드",12530,238,194],["United States","MW",19,"anolorcode","어널러코드",11195,315,252],["United States","MW",20,"thisisneverthat","디스이즈네버댓",11112,145,99],
+["United States","W",1,"ronron","론론",9752,187,114],["United States","W",2,"standoil","스탠드오일",9010,77,62],["United States","W",3,"osoi","오소이",7894,30,29],["United States","W",4,"hugyourskin","허그유어스킨",7546,115,80],["United States","W",5,"partimentowomen","파르티멘토 우먼",7336,198,81],["United States","W",6,"losesleepover16","루즈슬립오버",6839,85,64],["United States","W",7,"asura","아수라",6597,127,69],["United States","W",8,"painorpleasure","페인오어플레져",6152,71,39],["United States","W",9,"asyouare","애즈유아",5877,103,73],["United States","W",10,"rosefrantz","로제프란츠",5828,105,74],["United States","W",11,"khiho","기호",5773,51,49],["United States","W",12,"nain","아틀리에 나인",5636,94,74],["United States","W",13,"pleasenofollow","플리즈노팔로우",5506,89,49],["United States","W",14,"hieta","히에타",5204,47,30],["United States","W",15,"vikinivender","비키니밴더",4634,131,81],["United States","W",16,"vanwalk","반워크",4490,72,51],["United States","W",17,"twee","트위",4475,139,91],["United States","W",18,"sappun","사뿐",4451,116,83],["United States","W",19,"highschooldisco","하이스쿨디스코",4380,94,77],["United States","W",20,"saltandchocolate","솔트앤초콜릿",4341,51,48]
+];
+
+// === STATE ===
+let state = {tab:0, country1:'ALL', month:'202606', country2:'ALL', country3:'ALL', gender:'MW'};
+const MONTHS = {202606:'2026년 6월',202605:'2026년 5월',202604:'2026년 4월',202603:'2026년 3월'};
+const COUNTRIES = ['Japan','United States','Hong Kong','Taiwan','Singapore'];
+
+// === UTILS ===
+function fmt(n){
+  if(n>=1000000) return '$'+(n/1000000).toFixed(1)+'M';
+  if(n>=1000) return '$'+(n/1000).toFixed(1)+'K';
+  return '$'+n;
+}
+function fmtNum(n){ return n.toLocaleString(); }
+function rnkBadge(r){
+  let cls=r==1?'gold':r==2?'silver':r==3?'bronze':'';
+  let sym=r==1?'🥇':r==2?'🥈':r==3?'🥉':r;
+  return `<span class="rank-badge ${cls}">${sym}</span>`;
+}
+function brandName(b, nm){ return nm||(BN[b]||b); }
+
+// === RENDER MONTHLY ===
+function renderMonthly(){
+  const {country1, month} = state;
+  let rows = MONTHLY.filter(r=>r[0]===String(month));
+  let isAll1 = country1==='ALL';
+  if(!isAll1) rows = rows.filter(r=>r[1]===country1);
+  // For ALL: aggregate and re-rank
+  if(isAll1){
+    let agg={};
+    rows.forEach(([ym,co,rk,br,rv,qty,ord])=>{
+      if(!agg[br]) agg[br]={brand:br,revenue:0,qty:0,orders:0};
+      agg[br].revenue+=rv; agg[br].qty+=qty; agg[br].orders+=ord;
+    });
+    rows=Object.values(agg).sort((a,b)=>b.revenue-a.revenue).slice(0,20).map((r,i)=>([month,'ALL',i+1,r.brand,r.revenue,r.qty,r.orders]));
+  }
+  let html=`<div class="table-wrap"><table>
+    <tr><th>#</th><th>브랜드</th><th class="num">매출(USD)</th><th class="num">수량</th><th class="num">주문수</th></tr>`;
+  rows.forEach(([ym,co,rk,br,rv,qty,ord])=>{
+    let nm=BN[br]||br;
+    html+=`<tr><td>${rnkBadge(rk)}</td>
+    <td><span class="brand-nm">${nm}</span> <span class="brand-code">${br}</span></td>
+    <td class="num">${fmt(rv)}</td>
+    <td class="num">${fmtNum(qty)}</td>
+    <td class="num">${fmtNum(ord)}</td></tr>`;
+  });
+  if(!rows.length) html+=`<tr><td colspan="6" class="empty">데이터 없음</td></tr>`;
+  html+='</table></div>';
+  document.getElementById('monthlyTable').innerHTML=html;
+}
+
+// === RENDER RISING ===
+function renderRising(){
+  const {country2} = state;
+  let rows = [...RISING];
+  let isAll2 = country2==='ALL';
+  if(!isAll2) rows = rows.filter(r=>r[0]===country2);
+  // For ALL: take top 20 by growth_pct across all countries
+  if(isAll2){
+    rows = rows.sort((a,b)=>b[5]-a[5]).slice(0,20).map((r,i)=>[r[0],i+1,...r.slice(2)]);
+  }
+  let html=`<div class="table-wrap"><table>
+    <tr><th>#</th>${isAll2?'<th>국가</th>':''}
+    <th>브랜드</th><th class="num">6월 매출</th><th class="num">5월 매출</th><th class="num">성장률</th></tr>`;
+  rows.forEach(([co,rk,br,jun,may,pct])=>{
+    let nm=BN[br]||br;
+    let pctCls=pct>=1000?'growth-high':'growth-pos';
+    let pctStr=pct>=99999?'신규':'+'+pct.toFixed(1)+'%';
+    html+=`<tr><td>${rnkBadge(rk)}</td>
+    ${isAll2?`<td>${CTAG[co]||co}</td>`:''}
+    <td><span class="brand-nm">${nm}</span> <span class="brand-code">${br}</span></td>
+    <td class="num">${fmt(jun)}</td>
+    <td class="num">${fmt(may)}</td>
+    <td class="num"><span class="${pctCls}">${pctStr}</span></td></tr>`;
+  });
+  if(!rows.length) html+=`<tr><td colspan="6" class="empty">데이터 없음</td></tr>`;
+  html+='</table></div>';
+  document.getElementById('risingTable').innerHTML=html;
+}
+
+// === RENDER GENDER ===
+function renderGender(){
+  const {country3, gender} = state;
+  let rows = GENDER.filter(r=>r[1]===gender);
+  let isAll3 = country3==='ALL';
+  if(!isAll3) rows = rows.filter(r=>r[0]===country3);
+  if(isAll3){
+    let agg={};
+    rows.forEach(([co,gd,rk,br,nm,rv,qty,ord])=>{
+      if(!agg[br]) agg[br]={brand:br,nm:nm,revenue:0,qty:0,orders:0};
+      agg[br].revenue+=rv; agg[br].qty+=qty; agg[br].orders+=ord;
+    });
+    rows=Object.values(agg).sort((a,b)=>b.revenue-a.revenue).slice(0,20)
+      .map((r,i)=>(['ALL',gender,i+1,r.brand,r.nm,r.revenue,r.qty,r.orders]));
+  }
+  let html=`<div class="table-wrap"><table>
+    <tr><th>#</th><th>브랜드</th><th class="num">매출(USD)</th><th class="num">수량</th><th class="num">주문수</th></tr>`;
+  rows.forEach(([co,gd,rk,br,nm,rv,qty,ord])=>{
+    html+=`<tr><td>${rnkBadge(rk)}</td>
+    <td><span class="brand-nm">${nm||BN[br]||br}</span> <span class="brand-code">${br}</span></td>
+    <td class="num">${fmt(rv)}</td>
+    <td class="num">${fmtNum(qty)}</td>
+    <td class="num">${fmtNum(ord)}</td></tr>`;
+  });
+  if(!rows.length) html+=`<tr><td colspan="6" class="empty">데이터 없음</td></tr>`;
+  html+='</table></div>';
+  document.getElementById('genderTable').innerHTML=html;
+}
+
+// === CONTROLS ===
+function switchTab(n){
+  state.tab=n;
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i===n));
+  document.querySelectorAll('.panel').forEach((p,i)=>p.classList.toggle('active',i===n));
+}
+function setCountry(tab, val){
+  if(tab===1) state.country1=val;
+  else if(tab===2) state.country2=val;
+  else state.country3=val;
+  let grp=document.getElementById('country'+tab);
+  grp.querySelectorAll('.btn').forEach(b=>b.classList.toggle('active',
+    (b.textContent.trim().startsWith('전체')&&val==='ALL')||
+    (val!=='ALL'&&b.onclick&&b.onclick.toString().includes(`'${val}'`))
+  ));
+  if(tab===1) renderMonthly();
+  else if(tab===2) renderRising();
+  else renderGender();
+}
+function setMonth(m){
+  state.month=m;
+  document.querySelectorAll('#month1 .btn').forEach(b=>{
+    b.classList.toggle('active',b.onclick&&b.onclick.toString().includes(`'${m}'`));
+  });
+  renderMonthly();
+}
+function setGender(g){
+  state.gender=g;
+  document.querySelectorAll('#gender3 .btn').forEach(b=>{
+    b.classList.toggle('active',b.onclick&&b.onclick.toString().includes(`'${g}'`));
+  });
+  renderGender();
+}
+
+// === INIT ===
+document.getElementById('updatedAt').textContent='기준: 2026년 6월 30일 | 3~6월 데이터';
+renderMonthly();
+renderRising();
+renderGender();
+</script>
+</body>
+</html>
